@@ -11,5 +11,5 @@ This is a simple to-do list application built with React, Next.js, TailwindCSS, 
 
 1. Clone the repository:
    ```sh
-   git clone https://github.com/yourusername/todo-app.git
-   cd todo-app
+   git clone https://github.com/limaxrayxray/TODO
+   cd TODO
