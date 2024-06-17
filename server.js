@@ -1,35 +1,30 @@
-// server.js
 const express = require('express');
-const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
-const cors = require('cors');
+const next = require('next');
+const http = require('http');
+const socketIo = require('socket.io');
 
-const app = express();
-app.use(cors());
-app.use(bodyParser.json());
+const dev = process.env.NODE_ENV !== 'production';
+const app = next({ dev });
+const handle = app.getRequestHandler();
 
-mongoose.connect('mongodb://localhost:27017/todo', { useNewUrlParser: true, useUnifiedTopology: true });
+app.prepare().then(() => {
+  const server = express();
+  const httpServer = http.createServer(server);
+  const io = socketIo(httpServer);
 
-const taskSchema = new mongoose.Schema({
-  title: String,
-  description: String,
-  dueDate: String,
-  priority: String,
-});
+  io.on('connection', (socket) => {
+    console.log('New client connected');
+    socket.on('disconnect', () => {
+      console.log('Client disconnected');
+    });
+  });
 
-const Task = mongoose.model('Task', taskSchema);
+  server.all('*', (req, res) => {
+    return handle(req, res);
+  });
 
-app.get('/api/tasks', async (req, res) => {
-  const tasks = await Task.find();
-  res.json(tasks);
-});
-
-app.post('/api/tasks', async (req, res) => {
-  const task = new Task(req.body);
-  await task.save();
-  res.json(task);
-});
-
-app.listen(3001, () => {
-  console.log('Server is running on port 3001');
+  httpServer.listen(3000, (err) => {
+    if (err) throw err;
+    console.log('> Ready on http://localhost:3000');
+  });
 });
